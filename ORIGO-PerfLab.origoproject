@@ -1,0 +1,7 @@
+ORIGO_PROJECT 3
+Name "ORIGO-PerfLab"
+StartupMap "Assets/Maps/PerfLab.map"
+StartupMapGuid ""
+LastMap "Assets/Maps/PerfLab.map"
+LastMapGuid ""
+DefaultGameMode "PerfLabGameMode"
