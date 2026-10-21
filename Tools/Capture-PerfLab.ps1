@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)][string]$EngineExe,
-    [ValidateSet('static','moving','physics','particles','empty')][string]$Scenario = 'static',
+    [ValidateSet('static','instances','moving','physics','particles','empty')][string]$Scenario = 'static',
     [ValidateSet(0,100,500,1000,5000,10000,25000,50000)][int]$Count = 1000,
     [ValidateRange(0,600)][int]$WarmupSeconds = 10,
     [ValidateRange(1,600)][int]$CaptureSeconds = 30,
