@@ -4,7 +4,7 @@
 
 PerfLab is a separate ORIGO game project for creating repeatable workloads. It gives us a consistent way to answer whether an optimization improves the CPU side, GPU side, physics, transient effects, or frame-time stability.
 
-The initial implementation is deliberately simple and uses the engine-owned default cube/default material so asset import or texture decoding is not mixed into steady-state object-count tests.
+The initial implementation uses the engine-owned default cube/default material so texture decoding is not mixed into steady-state object-count tests. A small authored UV sphere is used for physics-ball geometry.
 
 ## Scenarios
 
@@ -26,17 +26,25 @@ Uses the same default cube mesh/material but changes each object's Z and rotatio
 
 The current test uses deterministic phases derived from each object's index. The update is repeatable for equivalent start conditions, but exact frame timing still depends on hardware and system load.
 
-### Physics stack
+### Randomized physics torture test
 
-Creates box colliders and dynamic rigidbodies over a large static floor. The interactive presets are 100 and 500 bodies; scripted counts are restricted to 1,000 for safety.
+Creates a broad floor plus randomly placed and initially moving dynamic bodies. The mode is editor-configurable: boxes only, spheres only, or mixed. Spheres use the authored unit UV-sphere mesh and a matching sphere collider. Each body gets deterministic seeded positions, rotations, angular/linear velocities, varied mass, low damping, continuous collision, and the configured restitution. Physics counts are editable from 1 to 1,500.
 
-This measures genuine Jolt-backed rigidbody work, not just the cost of drawing many cubes. Bigger populations may cause contacts and physics synchronization to dominate. Keep it separate from static/moving rendering baselines.
+This avoids the overly regular cube stack, makes collisions happen from several directions, and produces a richer Jolt workload. Keep it separate from render-only object baselines because broad-phase, narrow-phase, contact solving and transform synchronization can dominate. Change the seed to compare repeatable layouts with different collision patterns.
 
 ### Particles
 
-Uses the Scene runtime transient-particle-burst API. The particle scenario emits repeated bursts so the approximate live particle population remains present throughout a capture. A separate one-shot burst control is useful for measuring burst spikes in editor play.
+Uses the Scene runtime transient-particle-burst API. The particle scenario emits repeated bursts so the approximate live particle population remains present throughout a capture. A separate one-shot burst control is useful for measuring burst spikes in editor play. The burst interval is editable in the Inspector.
 
-The requested count is an approximate steady-state target based on the burst interval and randomized lifetime. It is not a guarantee of exact live particle count, and it should not be compared to GPU-simulated particles without matching simulation and rendering semantics.
+The requested count is an approximate steady-state target derived from burst interval and lifetime. It is not a guarantee of exact live particle count and should not be compared to GPU-simulated particles without matching simulation and rendering semantics.
+
+### Point-light grid
+
+Creates a visible receiver floor and a configurable grid of point lights (0–128). Color, intensity and positions vary deterministically with the benchmark seed. Point-light shadow casting is independently toggleable, so non-shadowed light processing can be compared with a much heavier shadow workload. The engine may clamp evaluated lights through its renderer settings; include active light count and renderer settings with the capture.
+
+### Spawn/destroy churn
+
+Repeatedly removes and recreates a randomized population at a configurable interval. This stresses object lifetime, physics/render cache cleanup, scene-index invalidation, memory allocation/reuse and initial render submission, rather than only steady-state drawing. The runtime cleanup path uses ORIGO's deferred destruction bridge so physics objects are removed from the simulation as well as from the scene.
 
 ### Camera sweep
 
@@ -88,7 +96,7 @@ At minimum, preserve:
 - Startup population-build duration and any later spikes.
 - A viewport image from the same scenario.
 
-Existing ORIGO profile fields and the reported counts can vary by engine commit. If the profile does not show GPU timer validity, treat the GPU time as unavailable, not zero. Do not add nested CPU scopes and GPU timer values into a fabricated “total frame time”.
+Existing ORIGO profile fields and the reported counts can vary by engine commit. Generated objects use a very large explicit runtime draw-distance override to bypass the renderer's automatic small-prop cutoff, and the camera auto-fits the test bounds (far clip is 5,000). If edge objects still pop in on a new engine build, capture the same run with the built-in frustum-culling setting toggled as a diagnostic; do not use a frustum-culling-off run as the optimization baseline. If the profile does not show GPU timer validity, treat the GPU time as unavailable, not zero. Do not add nested CPU scopes and GPU timer values into a fabricated “total frame time”.
 
 ## Suggested initial matrix
 
