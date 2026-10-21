@@ -14,6 +14,12 @@ Creates ordinary static mesh-renderer GameObjects in a roughly square X/Y grid. 
 
 This is a broad engine workload, not only a draw-call counter. It includes object storage, world-matrix cache checks, scene/render-object construction, existing render batching, per-instance view/distance tests, submission, and drawing visible cubes. A larger population is spread over a correspondingly larger area, so much of the added population may be outside the camera frustum; that is intentional for evaluating the current per-instance culling path.
 
+### Instanced Static Mesh
+
+Creates one GameObject with an Instanced Static Mesh component and places the requested number of default-cube transforms in that component. The in-game presets are 10k and 25k; scripted runs support up to 50k placements.
+
+This scenario and the GameObject grid use equivalent repeated geometry/material and approximately the same spatial layout, but they differ in scene-object count. Compare `static -Count 10000` with `instances -Count 10000` on the same build and camera. The pair helps separate scene traversal and render-object construction from the cost of visiting and culling instance transforms. Both paths still use ORIGO's current renderer; this is not a GPU-driven culling test.
+
 ### Moving grid
 
 Uses the same default cube mesh/material but changes each object's Z and rotation every update. It increases work for gameplay transform writes, world-matrix recomputation, dynamic submission and view-dependent renderer caches.
@@ -44,7 +50,7 @@ Removes all PerfLab-generated population objects but leaves the authored camera/
 
 ## Scripted capture
 
-Tools/Capture-PerfLab.ps1 launches the supplied engine executable with the project descriptor and --play-only --auto-play. That avoids the second editor viewport and most editor tooling while retaining ORIGO's project/game module/runtime path.
+`Tools/Capture-PerfLab.ps1` launches the supplied engine executable with the project descriptor and --play-only --auto-play. That avoids the second editor viewport and most editor tooling while retaining ORIGO's project/game module/runtime path.
 
 The script sets:
 
@@ -89,7 +95,7 @@ Existing ORIGO profile fields and the reported counts can vary by engine commit.
 | Test | Scenario/count | Camera | Primary question |
 |---|---|---|---|
 | Low-workload control | Empty / 0 | Fixed | What is the runtime host/profiler baseline? |
-| Small object baseline | Static / 1,000 | Fixed | Does the ordinary workload run smoothly? |
+| Small object baseline | Static / 1,000 | Fixed | Does the ordinary workload run smoothly? |\n| Instancing comparison | Static and Instances / 10,000 each | Fixed | What cost is removed by representing placements under one ISM component? |
 | Main regression target | Static / 5,000 and 10,000 | Fixed | How does CPU traversal scale with population? |
 | Large-scene stress | Static / 25,000 | Fixed | Does per-placement culling dominate? |
 | Dynamic update | Moving / 1,000 and 5,000 | Fixed | How expensive are per-frame transform changes? |
