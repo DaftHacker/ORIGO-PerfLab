@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -82,6 +83,22 @@ private:
 
     static constexpr const char* kSphereGuid = "f3120000000000000000000000000001";
     static constexpr float kBenchmarkDrawDistance = 100000.0f;
+
+    template<typename T, typename = void>
+    struct HasRuntimeMaxDrawDistance : std::false_type {};
+
+    template<typename T>
+    struct HasRuntimeMaxDrawDistance<T, std::void_t<decltype(std::declval<T&>().runtimeMaxDrawDistance)>>
+        : std::true_type {};
+
+    template<typename T>
+    static void SetBenchmarkDrawDistance(T& renderer) {
+        // Newer ORIGO SDKs expose a runtime draw-distance override. Keep the project
+        // source compatible with older generated SDKs so hot reload still works;
+        // rebuild ORIGO Engine to activate the override and eliminate auto-distance pop-in.
+        if constexpr (HasRuntimeMaxDrawDistance<T>::value)
+            renderer.runtimeMaxDrawDistance = kBenchmarkDrawDistance;
+    }
 
     static bool IsPerfLabObject(const Origo::GameObject& object) {
         return object.name.compare(0, 8, "PerfLab:") == 0;
@@ -305,7 +322,7 @@ private:
         object.meshRenderer.receiveShadows = receiveShadows;
         // Keep benchmark objects in range even when the camera fits a very large
         // population. The old size-based auto-distance caused edge cubes to vanish.
-        object.meshRenderer.runtimeMaxDrawDistance = kBenchmarkDrawDistance;
+        SetBenchmarkDrawDistance(object.meshRenderer);
     }
 
     void RebuildPopulation(Origo::Scene& scene, Scenario scenario, int count) {
