@@ -11,6 +11,7 @@ The default map creates a camera and directional light. When play begins, PerfLa
 The first scenarios are:
 
 - **Static grid:** 1,000, 5,000, 10,000, or 25,000 ordinary renderable objects. Repeated mesh/material state lets ORIGO use its existing batching path while the CPU still has to process the scene.
+- **Instanced Static Mesh:** one scene object containing 10,000 or 25,000 repeated placements, to isolate per-GameObject overhead from per-instance culling and rendering.
 - **Moving grid:** objects whose transforms change over time, to stress transform updates and dynamic render submission.
 - **Physics stack:** 100 or 500 rigidbody/collider cubes over a static floor. This is a real physics workload, unlike a render-only balls demo.
 - **Particles:** a sustained transient-particle workload, plus a one-shot particle burst button.
