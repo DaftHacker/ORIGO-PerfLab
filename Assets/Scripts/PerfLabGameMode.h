@@ -33,13 +33,14 @@ public:
 
         m_mode = ParseScenario(std::getenv("ORIGO_PERFLAB_SCENARIO"));
         int defaultCount = 1000;
-        if (m_mode == Scenario::Physics) defaultCount = 100;
+        if (m_mode == Scenario::Instances) defaultCount = 10000;
+        else if (m_mode == Scenario::Physics) defaultCount = 100;
         else if (m_mode == Scenario::Particles) defaultCount = 5000;
         else if (m_mode == Scenario::Empty) defaultCount = 0;
         m_targetCount = ReadIntEnv("ORIGO_PERFLAB_COUNT", defaultCount, 0, 50000);
         if (m_mode == Scenario::Physics) m_targetCount = std::clamp(m_targetCount, 1, 1000);
         if (m_mode == Scenario::Particles) m_targetCount = std::clamp(m_targetCount, 100, 50000);
-        if (m_mode == Scenario::Static || m_mode == Scenario::Moving)
+        if (m_mode == Scenario::Static || m_mode == Scenario::Instances || m_mode == Scenario::Moving)
             m_targetCount = std::clamp(m_targetCount, 1, 50000);
         RebuildPopulation(scene, m_mode, m_targetCount);
     }
@@ -67,7 +68,7 @@ public:
     }
 
 private:
-    enum class Scenario { Static, Moving, Physics, Particles, Empty };
+    enum class Scenario { Static, Instances, Moving, Physics, Particles, Empty };
 
     struct MovingItem {
         std::uint32_t id = 0;
@@ -120,6 +121,7 @@ private:
     static Scenario ParseScenario(const char* value) {
         if (!value || !*value) return Scenario::Static;
         if (std::strcmp(value, "static") == 0) return Scenario::Static;
+        if (std::strcmp(value, "instances") == 0) return Scenario::Instances;
         if (std::strcmp(value, "moving") == 0) return Scenario::Moving;
         if (std::strcmp(value, "physics") == 0) return Scenario::Physics;
         if (std::strcmp(value, "particles") == 0) return Scenario::Particles;
@@ -129,7 +131,8 @@ private:
 
     static const char* ScenarioName(Scenario scenario) {
         switch (scenario) {
-        case Scenario::Static: return "Static grid";
+        case Scenario::Static: return "GameObject grid";
+        case Scenario::Instances: return "Instanced Static Mesh";
         case Scenario::Moving: return "Moving grid";
         case Scenario::Physics: return "Physics stack";
         case Scenario::Particles: return "Particles";
@@ -170,6 +173,7 @@ private:
         m_liveObjectCount = 0;
 
         if (scenario == Scenario::Physics) AppendFloor(scene);
+        if (scenario == Scenario::Instances) AppendInstancePopulation(scene, count);
         if (scenario == Scenario::Static || scenario == Scenario::Moving || scenario == Scenario::Physics) {
             const int safeCount = scenario == Scenario::Physics
                 ? std::clamp(count, 1, 1000)
@@ -241,6 +245,34 @@ private:
         scene.dirty = true;
         m_lastBuildMs = std::chrono::duration<float, std::milli>(
             std::chrono::steady_clock::now() - start).count();
+    }
+
+    void AppendInstancePopulation(Origo::Scene& scene, int count) {
+        const int safeCount = std::clamp(count, 1, 50000);
+        Origo::GameObject& object = AppendSceneObject(scene, "PerfLab:InstancedMesh");
+        object.mobility = Origo::ObjectMobility::Static;
+        object.hasMeshRenderer = true;
+        object.meshRenderer.mesh = 0;
+        object.meshRenderer.material = 0;
+        object.meshRenderer.castShadows = false;
+        object.meshRenderer.receiveShadows = false;
+        object.hasInstancedStaticMesh = true;
+        object.instancedStaticMesh.enabled = true;
+        object.instancedStaticMesh.cullDistance = 0.0f;
+        object.instancedStaticMesh.instances.reserve(static_cast<std::size_t>(safeCount));
+
+        const int columns = std::max(1, static_cast<int>(std::ceil(std::sqrt(static_cast<float>(safeCount)))));
+        const int rows = (safeCount + columns - 1) / columns;
+        constexpr float spacing = 1.8f;
+        constexpr float scale = 0.7f;
+        for (int index = 0; index < safeCount; ++index) {
+            const int column = index % columns;
+            const int row = index / columns;
+            const float x = (static_cast<float>(column) - static_cast<float>(columns - 1) * 0.5f) * spacing;
+            const float y = (static_cast<float>(row) - static_cast<float>(rows - 1) * 0.5f) * spacing;
+            object.instancedStaticMesh.instances.emplace_back(x, y, 0.45f, 0.0f, 0.0f, 0.0f, scale, scale, scale);
+        }
+        m_liveObjectCount = safeCount;
     }
 
     void AppendFloor(Origo::Scene& scene) {
@@ -319,13 +351,16 @@ private:
 
     void DrawHud(Origo::Scene& scene) {
         scene.UIPanel("PerfLab.Panel",
-            {0.015f, 0.015f, 0.385f, 0.505f},
+            {0.015f, 0.015f, 0.385f, 0.56f},
             {0.025f, 0.035f, 0.055f, 0.88f});
 
         char status[256]{};
         char timing[256]{};
-        std::snprintf(status, sizeof(status), "%s  |  OBJECTS %d",
-            ScenarioName(m_mode), m_liveObjectCount);
+        const char* populationLabel = m_mode == Scenario::Particles ? "TARGET" :
+            (m_mode == Scenario::Instances ? "PLACEMENTS" : "OBJECTS");
+        const int populationValue = m_mode == Scenario::Particles ? m_targetCount : m_liveObjectCount;
+        std::snprintf(status, sizeof(status), "%s  |  %s %d",
+            ScenarioName(m_mode), populationLabel, populationValue);
         std::snprintf(timing, sizeof(timing), "Tick delta %.2f ms  |  Build/clear %.2f ms  |  Camera %s",
             m_smoothedTickMs, m_lastBuildMs, m_cameraSweep ? "sweep" : "fixed");
 
@@ -344,22 +379,26 @@ private:
             RebuildPopulation(scene, Scenario::Static, 10000);
         if (scene.UIButton("PerfLab.Static25K", "STATIC 25K", {0.205f, 0.212f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Static, 25000);
-        if (scene.UIButton("PerfLab.Moving1K", "MOVING 1K", {0.03f, 0.264f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Instances10K", "ISM 10K", {0.03f, 0.264f, 0.16f, 0.044f}))
+            RebuildPopulation(scene, Scenario::Instances, 10000);
+        if (scene.UIButton("PerfLab.Instances25K", "ISM 25K", {0.205f, 0.264f, 0.16f, 0.044f}))
+            RebuildPopulation(scene, Scenario::Instances, 25000);
+        if (scene.UIButton("PerfLab.Moving1K", "MOVING 1K", {0.03f, 0.316f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Moving, 1000);
-        if (scene.UIButton("PerfLab.Moving5K", "MOVING 5K", {0.205f, 0.264f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Moving5K", "MOVING 5K", {0.205f, 0.316f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Moving, 5000);
-        if (scene.UIButton("PerfLab.Physics100", "PHYSICS 100", {0.03f, 0.316f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Physics100", "PHYSICS 100", {0.03f, 0.368f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Physics, 100);
-        if (scene.UIButton("PerfLab.Physics500", "PHYSICS 500", {0.205f, 0.316f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Physics500", "PHYSICS 500", {0.205f, 0.368f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Physics, 500);
-        if (scene.UIButton("PerfLab.Particles5K", "PARTICLES 5K", {0.03f, 0.368f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Particles5K", "PARTICLES 5K", {0.03f, 0.42f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Particles, 5000);
-        if (scene.UIButton("PerfLab.Burst", "PARTICLE BURST", {0.205f, 0.368f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Burst", "PARTICLE BURST", {0.205f, 0.42f, 0.16f, 0.044f}))
             SpawnParticleBurst(scene, 5000);
         if (scene.UIButton("PerfLab.CameraSweep", m_cameraSweep ? "CAMERA FIXED" : "CAMERA SWEEP",
-            {0.03f, 0.42f, 0.16f, 0.044f}))
+            {0.03f, 0.472f, 0.16f, 0.044f}))
             m_cameraSweep = !m_cameraSweep;
-        if (scene.UIButton("PerfLab.Clear", "CLEAR SCENE", {0.205f, 0.42f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Clear", "CLEAR SCENE", {0.205f, 0.472f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Empty, 0);
     }
 
