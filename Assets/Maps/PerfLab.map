@@ -1,15 +1,15 @@
 ORIGO_SCENE 29
 Scene "ORIGO PerfLab"
-NextId 3
+NextId 5
 Environment 0 0.025 0.055 0.11 0.34 0.46 0.64 0.035 0.04 0.055 0.95 0 0 "" 0.80 0.24 1 0.45 1.3
 PhysicsWorld 0 0 -9.81
 GameMode "PerfLabGameMode"
-ObjectCount 2
+ObjectCount 4
 Object 1 0 1 "PerfLab Camera"
 Transform -55 -70 37 0 -22 37 1 1 1
 MeshRenderer 0 0 "" 0 "" 1 1
 SkeletalMeshRenderer 0 0 "" 0 "" "" 0 1 1
-Camera 1 62 0.08 800 1 1 1 1 1
+Camera 1 62 0.08 5000 1 1 1 1 1
 Light 0 0 1 1 1 1 10 20 35 1
 CharacterController 0 5 6.5 18 0 1 1 45 0.35 1
 Collider 0 0 1 1 1 0.5 2 0 0 0 0 1 1000 0.6 0 1 4294967295
@@ -46,4 +46,63 @@ BoneAttachment 0 1 0 "" 0 0 0 0 0 0 1 1 1 1
 TwoBoneIK 0 1 0 "" "" "" 0 0 0 0 0 0 1 0 1 1 0 0.35 0.9 0.03 4294967295 1 0.22 18
 PhysicsJoint 0 1 1 0 0 0 0 0 0 1 0 -90 90 0 0 0 0 1000 0 1 0 45 45 -35 35
 Mobility 0
+Prefab "" 0 0
+Object 3 0 0 "PerfLab Sphere Prototype"
+Transform 0 0 -10000 0 0 0 1 1 1
+MeshRenderer 1 0 "f3120000000000000000000000000001" 0 "" 0 0
+SkeletalMeshRenderer 0 0 "" 0 "" "" 0 1 1
+Camera 0 65 0.08 5000 0 1 1 1 1
+Light 0 0 1 1 1 1 10 20 35 1
+CharacterController 0 5 6.5 18 0 1 1 45 0.35 1
+Collider 0 0 1 1 1 0.5 2 0 0 0 0 1 1000 0.6 0 1 4294967295
+Rigidbody 0 1 0 1 0 1 1 0 0 0 0 1 0.05 0.05 0 0 0 0 0 0 0 0 0 0 0 0
+Vehicle 0 1 500 1000 6000 0.5 0.2 1 4000 2000 0.5 0.3 0.5 10 3.42 1.4 1 1000 180 5 2.66 1.78 1.3 1 0.74 1 -2.9 0
+Terrain 0 1 "" 10 10 1 1 1 4294967295
+ScriptCount 0
+AudioSource 0 0 "" 1 1 0 0 1 1 25
+ParticleEmitter 0 1 1 1 1 2 256 5 24 0.75 1.5 1 3 0.18 0.02 0.1 20 0 0 -1.5 1 0.65 0.18 1 1 0.1 0.02 0
+MechanicalAnimator 0 1 1 0 0 0 1 360 25 0 1 1
+Animator 0 1 1 1 1 0.2 0 0 "" "" ""
+BoneAttachment 0 1 0 "" 0 0 0 0 0 0 1 1 1 1
+TwoBoneIK 0 1 0 "" "" "" 0 0 0 0 0 0 1 0 1 1 0 0.35 0.9 0.03 4294967295 1 0.22 18
+PhysicsJoint 0 1 1 0 0 0 0 0 0 1 0 -90 90 0 0 0 0 1000 0 1 0 45 45 -35 35
+Mobility 1
+Prefab "" 0 0
+Object 4 0 1 "PerfLab Settings"
+Transform 0 0 -100 0 0 0 1 1 1
+MeshRenderer 0 0 "" 0 "" 1 1
+SkeletalMeshRenderer 0 0 "" 0 "" "" 0 1 1
+Camera 0 65 0.08 5000 0 1 1 1 1
+Light 0 0 1 1 1 1 10 20 35 1
+CharacterController 0 5 6.5 18 0 1 1 45 0.35 1
+Collider 0 0 1 1 1 0.5 2 0 0 0 0 1 1000 0.6 0 1 4294967295
+Rigidbody 0 1 0 1 0 1 1 0 0 0 0 1 0.05 0.05 0 0 0 0 0 0 0 0 0 0 0 0
+Vehicle 0 1 500 1000 6000 0.5 0.2 1 4000 2000 0.5 0.3 0.5 10 3.42 1.4 1 1000 180 5 2.66 1.78 1.3 1 0.74 1 -2.9 0
+Terrain 0 1 "" 10 10 1 1 1 4294967295
+ScriptCount 1
+Script 1 "PerfLabSettings" 16
+ScriptProperty "GameObjectCount" 1 1000
+ScriptProperty "InstanceCount" 1 10000
+ScriptProperty "MovingCount" 1 1000
+ScriptProperty "PhysicsCount" 1 180
+ScriptProperty "PhysicsShapeMode" 1 2
+ScriptProperty "PhysicsSeed" 1 1337
+ScriptProperty "PhysicsRestitution" 2 0.82
+ScriptProperty "PhysicsImpulse" 2 4.0
+ScriptProperty "ParticleTarget" 1 5000
+ScriptProperty "LightCount" 1 16
+ScriptProperty "LightShadows" 0 0
+ScriptProperty "ChurnCount" 1 500
+ScriptProperty "ChurnIntervalSeconds" 2 0.5
+ScriptProperty "ParticleBurstInterval" 2 0.2
+ScriptProperty "CameraMargin" 2 1.2
+ScriptProperty "PhysicsCastShadows" 0 0
+AudioSource 0 0 "" 1 1 0 0 1 1 25
+ParticleEmitter 0 1 1 1 1 2 256 5 24 0.75 1.5 1 3 0.18 0.02 0.1 20 0 0 -1.5 1 0.65 0.18 1 1 0.1 0.02 0
+MechanicalAnimator 0 1 1 0 0 0 1 360 25 0 1 1
+Animator 0 1 1 1 1 0.2 0 0 "" "" ""
+BoneAttachment 0 1 0 "" 0 0 0 0 0 0 1 1 1 1
+TwoBoneIK 0 1 0 "" "" "" 0 0 0 0 0 0 1 0 1 1 0 0.35 0.9 0.03 4294967295 1 0.22 18
+PhysicsJoint 0 1 1 0 0 0 0 0 0 1 0 -90 90 0 0 0 0 1000 0 1 0 45 45 -35 35
+Mobility 1
 Prefab "" 0 0
