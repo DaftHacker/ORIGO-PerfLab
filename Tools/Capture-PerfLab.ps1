@@ -49,6 +49,7 @@ $metadataFile = Join-Path $ResultsDir "$label.meta.txt"
     "Warm-up seconds: $WarmupSeconds"
     "Capture seconds: $CaptureSeconds"
     "Camera sweep: $([bool]$CameraSweep)"
+    "Camera auto-fit: True"
     "Build/configuration: record the exact engine build used for this run"
 ) | Set-Content -Encoding UTF8 $metadataFile
 
