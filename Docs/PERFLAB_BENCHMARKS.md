@@ -103,13 +103,16 @@ Existing ORIGO profile fields and the reported counts can vary by engine commit.
 | Test | Scenario/count | Camera | Primary question |
 |---|---|---|---|
 | Low-workload control | Empty / 0 | Fixed | What is the runtime host/profiler baseline? |
-| Small object baseline | Static / 1,000 | Fixed | Does the ordinary workload run smoothly? |\n| Instancing comparison | Static and Instances / 10,000 each | Fixed | What cost is removed by representing placements under one ISM component? |
+| Small object baseline | Static / 1,000 | Fixed | Does the ordinary workload run smoothly? |
+| Instancing comparison | Static and Instances / 10,000 each | Fixed | What cost is removed by representing placements under one ISM component? |
 | Main regression target | Static / 5,000 and 10,000 | Fixed | How does CPU traversal scale with population? |
 | Large-scene stress | Static / 25,000 | Fixed | Does per-placement culling dominate? |
 | Dynamic update | Moving / 1,000 and 5,000 | Fixed | How expensive are per-frame transform changes? |
 | Changing visibility | Static / 10,000 | Sweep | How does view motion affect culling and caches? |
-| Physics cost | Physics / 100 and 500 | Fixed | When do solver/contact/synchronization costs dominate? |
+| Physics cost | Physics / 100, 500 and 1,000 | Fixed | When do solver/contact/synchronization costs dominate? |
+| Lighting cost | Lights / 16, 64 and 128 | Fixed | How do light selection, shading and shadowing scale? |
 | Transient effects | Particles / 5,000 and 10,000 | Fixed | How do particle updates, sorting, uploads and rendering scale? |
+| Lifecycle stress | Churn / 500 and 2,000 | Fixed | How expensive are repeated creation/destruction and cache invalidation? |
 
 Run each test more than once on the same warm machine. Compare the distributions, not isolated lucky frames.
 
@@ -126,3 +129,12 @@ When a spatial hierarchy is prototyped, add an A/B switch and compare:
 - Camera sweep behavior and correctness when objects are edited or moved.
 
 The goal is lower CPU cost without false-negative culling, stale bounds, missing geometry or incorrect shadow casters.
+
+
+## References and design notes
+
+The scenario split follows a standard profiling principle: isolate rendering, physics, lifecycle work and effects before combining them into a “worst case.” Unreal's profiling notes explain that render-thread cost includes object culling, material/light setup, command preparation and driver overhead—not just draw-call count. [Unreal Engine CPU Profiling](https://dev.epicgames.com/documentation/en-us/unreal-engine/cpu-profiling?application_version=4.27)
+
+Jolt's own performance test includes mixed convex shapes falling onto mesh geometry, large piles of rigid bodies, continuous-collision variations, no-sleep runs and CSV frame timing. PerfLab's randomized mixed-shape test is a small gameplay-level complement, not a replacement for Jolt's dedicated physics microbenchmarks. [Jolt Physics PerformanceTest](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/PerformanceTest.md)
+
+Unity's physics profiler separately tracks active/sleeping bodies, colliders and contact counts. Once ORIGO's own profiler can reliably export comparable physics/contact counts, record them alongside time; body count alone does not describe solver difficulty. [Unity Physics Profiler](https://docs.unity.com/en-us/engine/6000.7/manual/physics-section/physics-overview/profiler-physics)
