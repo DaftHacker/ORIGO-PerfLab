@@ -15,7 +15,7 @@ $ResultsDir = Join-Path $PSScriptRoot '..\Results'
 New-Item -ItemType Directory -Force -Path $ResultsDir | Out-Null
 
 if ($Scenario -eq 'physics' -and ($Count -lt 1 -or $Count -gt 1000)) {
-    throw 'Physics captures support 100 or 500 bodies through this helper; use a custom environment for larger experiments.'
+    throw 'Physics captures are capped at 1,000 bodies by this helper to avoid accidental runaway test loads.'
 }
 if (($Scenario -eq 'static' -or $Scenario -eq 'moving') -and $Count -lt 1) {
     throw 'Static and moving scenarios require Count >= 1.'
