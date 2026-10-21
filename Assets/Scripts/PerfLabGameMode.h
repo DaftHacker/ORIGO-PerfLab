@@ -272,10 +272,22 @@ private:
     }
 
     void ClearPopulation(Origo::Scene& scene) {
-        scene.objects.erase(
-            std::remove_if(scene.objects.begin(), scene.objects.end(),
-                [](const Origo::GameObject& object) { return IsPerfLabObject(object); }),
-            scene.objects.end());
+        std::vector<std::uint32_t> removeIds;
+        removeIds.reserve(static_cast<std::size_t>(m_liveObjectCount) + 8);
+        for (const auto& object : scene.objects)
+            if (IsPerfLabObject(object)) removeIds.push_back(object.id);
+
+        if (scene.runtimeApi.destroyObject) {
+            // Use ORIGO's runtime bridge so physics bodies, script state, and renderer
+            // caches are invalidated together. Destruction is deferred until this
+            // game-mode callback completes, per the Scene API contract.
+            for (const std::uint32_t id : removeIds) scene.DestroyRuntimeObject(id);
+        } else {
+            scene.objects.erase(
+                std::remove_if(scene.objects.begin(), scene.objects.end(),
+                    [](const Origo::GameObject& object) { return IsPerfLabObject(object); }),
+                scene.objects.end());
+        }
         scene.objectIndexCacheSize = static_cast<std::size_t>(-1);
         scene.dirty = true;
         m_movingItems.clear();
@@ -426,7 +438,7 @@ private:
 
             object.hasCollider = true;
             object.collider.shape = sphere ? Origo::ColliderShape::Sphere : Origo::ColliderShape::Box;
-            object.collider.radius = 0.5f;
+            object.collider.radius = sphere ? 1.0f : 0.5f;
             object.collider.sizeX = object.collider.sizeY = object.collider.sizeZ = 1.0f;
             object.collider.friction = sphere ? 0.22f : 0.38f;
             object.collider.restitution = m_physicsRestitution;
@@ -631,7 +643,7 @@ private:
         scene.UIText("PerfLab.Hint", "Edit PerfLab Settings on the authored scene object in the Inspector.", 0.03f, 0.132f, 0.34f,
             {0.78f, 0.82f, 0.9f, 1.0f});
 
-        if (scene.UIButton("PerfLab.Static1K", "OBJECTS 1K", {0.03f, 0.16f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Static1K", "OBJECTS CONFIG", {0.03f, 0.16f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Static, m_gameObjectCount);
         if (scene.UIButton("PerfLab.Static5K", "OBJECTS 5K", {0.205f, 0.16f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Static, 5000);
@@ -643,7 +655,7 @@ private:
             RebuildPopulation(scene, Scenario::Instances, 10000);
         if (scene.UIButton("PerfLab.Instances25K", "ISM 25K", {0.205f, 0.264f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Instances, 25000);
-        if (scene.UIButton("PerfLab.Moving1K", "MOVING 1K", {0.03f, 0.316f, 0.16f, 0.044f}))
+        if (scene.UIButton("PerfLab.Moving1K", "MOVING CONFIG", {0.03f, 0.316f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Moving, m_movingCount);
         if (scene.UIButton("PerfLab.Moving5K", "MOVING 5K", {0.205f, 0.316f, 0.16f, 0.044f}))
             RebuildPopulation(scene, Scenario::Moving, 5000);
