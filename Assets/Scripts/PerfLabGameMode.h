@@ -565,11 +565,11 @@ private:
 
         m_cameraDirection = Normalize({-0.55f, -0.65f, 0.52f});
         m_cameraHomePosition = {
-            m_cameraTarget.x - m_cameraDirection.x * m_cameraDistance,
-            m_cameraTarget.y - m_cameraDirection.y * m_cameraDistance,
-            m_cameraTarget.z - m_cameraDirection.z * m_cameraDistance
+            m_cameraTarget.x + m_cameraDirection.x * m_cameraDistance,
+            m_cameraTarget.y + m_cameraDirection.y * m_cameraDistance,
+            m_cameraTarget.z + m_cameraDirection.z * m_cameraDistance
         };
-        m_cameraHomeForward = m_cameraDirection;
+        m_cameraHomeForward = {-m_cameraDirection.x, -m_cameraDirection.y, -m_cameraDirection.z};
         scene.SetRuntimeCameraView(m_cameraId, m_cameraHomePosition, m_cameraHomeForward, Origo::WorldAxes::Up);
         m_cameraWasSweeping = false;
     }
