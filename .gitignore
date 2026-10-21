@@ -1,0 +1,31 @@
+# Local build outputs
+out/
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.user
+
+# ORIGO generated/cache output
+.origo/
+.vs/
+*.pdb
+*.ilk
+*.obj
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+
+# Benchmark captures and screenshots
+Results/*
+!Results/.gitkeep
+*.ppm
+*.profile
+*.prof
