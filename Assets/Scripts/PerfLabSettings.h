@@ -19,5 +19,8 @@ public:
     ORIGO_PROPERTY_INT(LightCount, 16, 0, 128, 1);
     ORIGO_PROPERTY_BOOL(LightShadows, false);
     ORIGO_PROPERTY_INT(ChurnCount, 500, 10, 5000, 10);
+    ORIGO_PROPERTY_FLOAT(ChurnIntervalSeconds, 0.5f, 0.1f, 5.0f, 0.1f);
+    ORIGO_PROPERTY_FLOAT(ParticleBurstInterval, 0.2f, 0.05f, 2.0f, 0.05f);
     ORIGO_PROPERTY_FLOAT(CameraMargin, 1.2f, 1.0f, 2.5f, 0.05f);
+    ORIGO_PROPERTY_BOOL(PhysicsCastShadows, false);
 };
