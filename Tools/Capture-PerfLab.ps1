@@ -1,8 +1,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)][string]$EngineExe,
-    [ValidateSet('static','instances','moving','physics','particles','empty')][string]$Scenario = 'static',
-    [ValidateSet(0,100,500,1000,5000,10000,25000,50000)][int]$Count = 1000,
+    [ValidateSet('static','instances','moving','physics','particles','lights','churn','empty')][string]$Scenario = 'static',
+    [ValidateRange(0,50000)][int]$Count = 1000,
     [ValidateRange(0,600)][int]$WarmupSeconds = 10,
     [ValidateRange(1,600)][int]$CaptureSeconds = 30,
     [switch]$CameraSweep
@@ -14,14 +14,23 @@ $ProjectFile = (Resolve-Path (Join-Path $PSScriptRoot '..\ORIGO-PerfLab.origopro
 $ResultsDir = Join-Path $PSScriptRoot '..\Results'
 New-Item -ItemType Directory -Force -Path $ResultsDir | Out-Null
 
-if ($Scenario -eq 'physics' -and ($Count -lt 1 -or $Count -gt 1000)) {
-    throw 'Physics captures are capped at 1,000 bodies by this helper to avoid accidental runaway test loads.'
+if ($Scenario -eq 'physics' -and ($Count -lt 1 -or $Count -gt 1500)) {
+    throw 'Physics captures support 1–1,500 bodies. Start at 100 or 500 and increase carefully.'
 }
-if (($Scenario -eq 'static' -or $Scenario -eq 'moving') -and $Count -lt 1) {
-    throw 'Static and moving scenarios require Count >= 1.'
+if (($Scenario -eq 'static' -or $Scenario -eq 'instances') -and ($Count -lt 100 -or $Count -gt 50000)) {
+    throw 'Static and instance scenarios support 100–50,000 entries.'
 }
-if ($Scenario -eq 'particles' -and $Count -lt 100) {
-    throw 'Particle captures require Count >= 100.'
+if ($Scenario -eq 'moving' -and ($Count -lt 100 -or $Count -gt 25000)) {
+    throw 'Moving scenarios support 100–25,000 objects.'
+}
+if ($Scenario -eq 'particles' -and ($Count -lt 100 -or $Count -gt 50000)) {
+    throw 'Particle captures require Count between 100 and 50,000.'
+}
+if ($Scenario -eq 'lights' -and ($Count -lt 0 -or $Count -gt 128)) {
+    throw 'Lighting captures support 0–128 point lights.'
+}
+if ($Scenario -eq 'churn' -and ($Count -lt 10 -or $Count -gt 5000)) {
+    throw 'Spawn/destroy churn supports 10–5,000 objects.'
 }
 if ($Scenario -eq 'empty') { $Count = 0 }
 
@@ -53,7 +62,8 @@ $keys = @(
     'ORIGO_PERFLAB_SCENARIO',
     'ORIGO_PERFLAB_COUNT',
     'ORIGO_PERFLAB_HUD',
-    'ORIGO_PERFLAB_CAMERA_SWEEP'
+    'ORIGO_PERFLAB_CAMERA_SWEEP',
+    'ORIGO_PERFLAB_AUTO_FIT'
 )
 $previous = @{}
 foreach ($key in $keys) { $previous[$key] = [Environment]::GetEnvironmentVariable($key, 'Process') }
@@ -68,6 +78,7 @@ try {
     $env:ORIGO_PERFLAB_COUNT = [string]$Count
     $env:ORIGO_PERFLAB_HUD = '0'
     $env:ORIGO_PERFLAB_CAMERA_SWEEP = if ($CameraSweep) { '1' } else { '0' }
+    $env:ORIGO_PERFLAB_AUTO_FIT = '1'
 
     Write-Host "Starting ORIGO PerfLab: $Scenario / $Count"
     Write-Host "Warm-up: $WarmupSeconds s; capture: $CaptureSeconds s"
