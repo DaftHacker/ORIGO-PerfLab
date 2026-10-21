@@ -542,7 +542,7 @@ private:
         } else if (m_mode == Scenario::Physics) {
             const float spread = std::max(4.0f, std::sqrt(static_cast<float>(m_targetCount)) * 0.56f);
             halfX = halfY = spread + 2.0f;
-            halfZ = 12.0f;
+            halfZ = 15.0f;
         } else if (m_mode == Scenario::Lights) {
             const float columns = std::ceil(std::sqrt(static_cast<float>(std::max(1, m_targetCount))));
             const float rows = std::ceil(static_cast<float>(std::max(1, m_targetCount)) / columns);
@@ -552,7 +552,7 @@ private:
         } else if (m_mode == Scenario::Churn) {
             const float columns = std::ceil(std::sqrt(static_cast<float>(std::max(1, m_targetCount))));
             halfX = halfY = columns * 1.2f + 4.0f;
-            halfZ = 9.0f;
+            halfZ = 11.0f;
         }
 
         const float radius = std::sqrt(halfX * halfX + halfY * halfY + halfZ * halfZ);
