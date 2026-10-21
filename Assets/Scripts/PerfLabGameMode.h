@@ -462,7 +462,8 @@ private:
     }
 
     void AppendLightingPopulation(Origo::Scene& scene, int count) {
-        const float extent = std::max(28.0f, std::sqrt(static_cast<float>(std::max(1, count))) * 4.0f + 8.0f);
+        const float columnsForBounds = std::ceil(std::sqrt(static_cast<float>(std::max(1, count))));
+        const float extent = std::max(40.0f, 2.0f * ((columnsForBounds - 1.0f) * 3.5f + 12.0f));
         Origo::GameObject& floor = AppendSceneObject(scene, "PerfLab:LightReceiver");
         floor.mobility = Origo::ObjectMobility::Static;
         floor.transform.z = -0.3f;
@@ -545,8 +546,8 @@ private:
         } else if (m_mode == Scenario::Lights) {
             const float columns = std::ceil(std::sqrt(static_cast<float>(std::max(1, m_targetCount))));
             const float rows = std::ceil(static_cast<float>(std::max(1, m_targetCount)) / columns);
-            halfX = columns * 3.5f + 3.0f;
-            halfY = rows * 3.5f + 3.0f;
+            halfX = (columns - 1.0f) * 3.5f + 12.0f;
+            halfY = (rows - 1.0f) * 3.5f + 12.0f;
             halfZ = 5.0f;
         } else if (m_mode == Scenario::Churn) {
             const float columns = std::ceil(std::sqrt(static_cast<float>(std::max(1, m_targetCount))));
